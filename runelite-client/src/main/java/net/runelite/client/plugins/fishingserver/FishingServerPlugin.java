@@ -55,13 +55,13 @@ import java.util.Map;
 
 @PluginDescriptor(
 	name = "Fishing server",
-	description = "Show fishing stats and mark fishing spots, also run a simple server exposing on-screen position of these spots.",
+	description = "Run a simple server exposing on-screen position of fishing spots.",
 	tags = {"overlay", "skilling"}
 )
 @PluginDependency(XpTrackerPlugin.class)
 @Singleton
 @Slf4j
-public class FishingPlugin extends Plugin
+public class FishingServerPlugin extends Plugin
 {
 	private static final int TRAWLER_SHIP_REGION_NORMAL = 7499;
 	private static final int TRAWLER_SHIP_REGION_SINKING = 8011;
@@ -69,7 +69,7 @@ public class FishingPlugin extends Plugin
 	private static final int TRAWLER_ACTIVITY_THRESHOLD = Math.round(0.15f * 255);
 
 	@Getter(AccessLevel.PACKAGE)
-	private final FishingSession session = new FishingSession();
+	private final FishingServerSession session = new FishingServerSession();
 
 	@Getter(AccessLevel.PACKAGE)
 	private Map<Integer, MinnowSpot> minnowSpots = new HashMap<>();
@@ -78,7 +78,7 @@ public class FishingPlugin extends Plugin
 	private NPC[] fishingSpots;
 
 	@Getter(AccessLevel.PACKAGE)
-	private FishingSpot currentSpot;
+	private FishingServerSpot currentSpot;
 
 	@Inject
 	private Client client;
@@ -93,41 +93,31 @@ public class FishingPlugin extends Plugin
 	private OverlayManager overlayManager;
 
 	@Inject
-	private FishingConfig config;
-
-	@Inject
-	private FishingOverlay overlay;
+	private FishingServerConfig config;
 
 	@Inject
 	private FishingSpotOverlay spotOverlay;
 
-	@Inject
-	private FishingSpotMinimapOverlay fishingSpotMinimapOverlay;
 
 	private boolean trawlerNotificationSent;
 
 	@Provides
-    FishingConfig provideConfig(ConfigManager configManager)
+    FishingServerConfig provideConfig(ConfigManager configManager)
 	{
-		return configManager.getConfig(FishingConfig.class);
+		return configManager.getConfig(FishingServerConfig.class);
 	}
 
 	@Override
 	protected void startUp() throws Exception
 	{
-		overlayManager.add(overlay);
 		overlayManager.add(spotOverlay);
-		overlayManager.add(fishingSpotMinimapOverlay);
 	}
 
 	@Override
 	protected void shutDown() throws Exception
 	{
 		spotOverlay.setHidden(true);
-		fishingSpotMinimapOverlay.setHidden(true);
-		overlayManager.remove(overlay);
 		overlayManager.remove(spotOverlay);
-		overlayManager.remove(fishingSpotMinimapOverlay);
 		minnowSpots.clear();
 		trawlerNotificationSent = false;
 		currentSpot = null;
@@ -152,7 +142,6 @@ public class FishingPlugin extends Plugin
 		}
 
 		spotOverlay.setHidden(!showOverlays);
-		fishingSpotMinimapOverlay.setHidden(!showOverlays);
 	}
 
 	@Subscribe
@@ -168,7 +157,6 @@ public class FishingPlugin extends Plugin
 		{
 			session.setLastFishCaught(Instant.now());
 			spotOverlay.setHidden(false);
-			fishingSpotMinimapOverlay.setHidden(false);
 		}
 	}
 
@@ -188,7 +176,7 @@ public class FishingPlugin extends Plugin
 		}
 
 		final NPC npc = (NPC) target;
-		FishingSpot spot = FishingSpot.getSPOTS().get(npc.getId());
+		FishingServerSpot spot = FishingServerSpot.getSPOTS().get(npc.getId());
 
 		if (spot == null)
 		{
@@ -256,7 +244,7 @@ public class FishingPlugin extends Plugin
 		final LocalPoint cameraPoint = new LocalPoint(client.getCameraX(), client.getCameraY());
 
 		final NPCQuery query = new NPCQuery()
-			.idEquals(Ints.toArray(FishingSpot.getSPOTS().keySet()));
+			.idEquals(Ints.toArray(FishingServerSpot.getSPOTS().keySet()));
 		NPC[] spots = queryRunner.runQuery(query);
 		// -1 to make closer things draw last (on top of farther things)
 		Arrays.sort(spots, Comparator.comparing(npc -> -1 * npc.getLocalLocation().distanceTo(cameraPoint)));
@@ -265,14 +253,14 @@ public class FishingPlugin extends Plugin
 		// process minnows
 		for (NPC npc : spots)
 		{
-			FishingSpot spot = FishingSpot.getSPOTS().get(npc.getId());
+			FishingServerSpot spot = FishingServerSpot.getSPOTS().get(npc.getId());
 
 			if (spot == null)
 			{
 				continue;
 			}
 
-			if (spot == FishingSpot.MINNOW && config.showMinnowOverlay())
+			if (spot == FishingServerSpot.MINNOW)
 			{
 				int id = npc.getIndex();
 				MinnowSpot minnowSpot = minnowSpots.get(id);
@@ -298,31 +286,6 @@ public class FishingPlugin extends Plugin
 		if (minnowSpot != null)
 		{
 			log.debug("Minnow spot {} despawned", npc);
-		}
-	}
-
-	@Subscribe
-	public void onVarbitChanged(VarbitChanged event)
-	{
-		if (!config.trawlerNotification() || client.getGameState() != GameState.LOGGED_IN)
-		{
-			return;
-		}
-
-		int regionID = client.getLocalPlayer().getWorldLocation().getRegionID();
-
-		if ((regionID == TRAWLER_SHIP_REGION_NORMAL || regionID == TRAWLER_SHIP_REGION_SINKING)
-			&& client.getVar(Varbits.FISHING_TRAWLER_ACTIVITY) <= TRAWLER_ACTIVITY_THRESHOLD)
-		{
-			if (!trawlerNotificationSent)
-			{
-				notifier.notify("[" + client.getLocalPlayer().getName() + "] has low Fishing Trawler activity!");
-				trawlerNotificationSent = true;
-			}
-		}
-		else
-		{
-			trawlerNotificationSent = false;
 		}
 	}
 }

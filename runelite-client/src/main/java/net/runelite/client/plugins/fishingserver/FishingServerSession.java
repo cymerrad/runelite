@@ -29,7 +29,7 @@ import lombok.Setter;
 
 import java.time.Instant;
 
-class FishingSession
+class FishingServerSession
 {
 	@Getter
 	@Setter
