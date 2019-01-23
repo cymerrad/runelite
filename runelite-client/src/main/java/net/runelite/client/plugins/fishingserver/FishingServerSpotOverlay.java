@@ -42,7 +42,7 @@ import java.awt.image.BufferedImage;
 import java.time.Duration;
 import java.time.Instant;
 
-class FishingSpotOverlay extends Overlay
+class FishingServerSpotOverlay extends Overlay
 {
 	private static final Duration MINNOW_MOVE = Duration.ofSeconds(15);
 	private static final Duration MINNOW_WARN = Duration.ofSeconds(3);
@@ -56,7 +56,7 @@ class FishingSpotOverlay extends Overlay
 	private boolean hidden;
 
 	@Inject
-	private FishingSpotOverlay(FishingServerPlugin plugin, FishingServerConfig config, Client client, ItemManager itemManager)
+	private FishingServerSpotOverlay(FishingServerPlugin plugin, FishingServerConfig config, Client client, ItemManager itemManager)
 	{
 		setPosition(OverlayPosition.DYNAMIC);
 		setLayer(OverlayLayer.ABOVE_SCENE);

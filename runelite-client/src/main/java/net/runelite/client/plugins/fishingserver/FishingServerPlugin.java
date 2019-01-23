@@ -96,7 +96,7 @@ public class FishingServerPlugin extends Plugin
 	private FishingServerConfig config;
 
 	@Inject
-	private FishingSpotOverlay spotOverlay;
+	private FishingServerSpotOverlay spotOverlay;
 
 
 	private boolean trawlerNotificationSent;
