@@ -33,7 +33,7 @@ import java.util.Map;
 import static net.runelite.api.NpcID.*;
 
 @Getter
-enum FishingServerSpot
+enum FishingHelperSpot
 {
 	SHRIMP("Shrimp, Anchovies", ItemID.RAW_SHRIMPS,
 		FISHING_SPOT_1518, FISHING_SPOT_1521, FISHING_SPOT_1523,
@@ -97,7 +97,7 @@ enum FishingServerSpot
 		FISHING_SPOT_8523);
 
 	@Getter
-	private static final Map<Integer, FishingServerSpot> SPOTS = new HashMap<>();
+	private static final Map<Integer, FishingHelperSpot> SPOTS = new HashMap<>();
 
 	private final String name;
 	private final int fishSpriteId;
@@ -105,9 +105,9 @@ enum FishingServerSpot
 
 	static
 	{
-		FishingServerSpot[] spots = values();
+		FishingHelperSpot[] spots = values();
 
-		for (FishingServerSpot spot : spots)
+		for (FishingHelperSpot spot : spots)
 		{
 			for (int spotId : spot.getIds())
 			{
@@ -116,7 +116,7 @@ enum FishingServerSpot
 		}
 	}
 
-	FishingServerSpot(String spot, int fishSpriteId, int... ids)
+	FishingHelperSpot(String spot, int fishSpriteId, int... ids)
 	{
 		this.name = spot;
 		this.fishSpriteId = fishSpriteId;
